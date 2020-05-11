@@ -2,12 +2,13 @@ function c = encode_hamming(b, parity_check_matrix, n_zero_padded_bits, switch_o
   if switch_off || isempty(b)
     c = b;
   else
-    if mod(length(b), 4) == 0)
+    if mod(length(b), 4) == 0
       % determine parameters
       k_prtyBits = size(parity_check_matrix,1);
       N_totBits = size(parity_check_matrix, 2);
       n_dataBits = N_totBits - k_prtyBits;
-      G = [eye(n_dataBits); parity_check_matrix(:,1:n_dataBits)];
+      n_words = length(b)/n_dataBits; ... number of words within input chunk
+
       G = [1 1 0 1;
          1 0 1 1;
          1 0 0 0;
