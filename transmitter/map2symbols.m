@@ -7,7 +7,7 @@ function d = map2symbols(c, constellation_order, switch_graph)
     n_words = length(c)/n_bits;
     w = reshape(c, [n_bits n_words])';
     % Normalization factor
-    qnorm = sqrt(2*(2^constellation_order-1)/3)
+    qnorm = sqrt(2*(2^constellation_order-1)/3);
     % QAM -- cut data word in half, gray mapping, BIN to DEC conversion, cartesian mapping, offset/rescale
     switch constellation_order
       case 2
