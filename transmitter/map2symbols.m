@@ -27,6 +27,7 @@ function d = map2symbols(c, constellation_order, switch_graph)
     
     % graphical output
     if switch_graph
-        plot(real(d), imag(d), 'o');
+      figure;
+      plot(real(d), imag(d), 'o');
     end
 end
