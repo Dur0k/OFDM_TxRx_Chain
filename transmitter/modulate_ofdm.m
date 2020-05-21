@@ -5,6 +5,7 @@ function z = modulate_ofdm(D, fft_size, cp_size, switch_graph)
   y = y(:);
   z = [y(end-cp_size+1:end); y];
   
+  
   if switch_graph
     figure;
     subplot(2,2,1)
@@ -12,6 +13,7 @@ function z = modulate_ofdm(D, fft_size, cp_size, switch_graph)
     subplot(2,2,2)
     plot(imag(z));
     subplot(2,2,[3 4])
-    plot(abs(fft(z)));
+    [psd,f] = periodogram(z, rectwin(length(z)), fft_size*10,length(z));
+    plot(f,10*log10(psd));
   end
 end
