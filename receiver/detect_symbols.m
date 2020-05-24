@@ -38,4 +38,12 @@ function c_hat = detect_symbols(d_bar, constellation_order, switch_graph)
          c_hat = [de2bi(round(I), 3, 'left-msb') de2bi(round(Q), 3, 'left-msb')];
          c_hat = [mod(c_hat(:,1:end/2)*G, 2) mod(c_hat(:,end/2+1:end)*G, 2)];
     end
+    c_hat = c_hat'(:);
+    if switch_graph
+      figure;
+      xline(0,'--');
+      vline(0,'--');
+      plot(real(d_bar), imag(d_bar), 'o');
+
+    end
 end
