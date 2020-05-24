@@ -27,4 +27,8 @@ function b_hat = decode_hamming(c_hat, parity_check_matrix, n_zero_padded_bits, 
       disp('Input length of b must be a multiple of 4')
     end
   end
+  if switch_graph
+      figure;
+      %plot(real(d), imag(d), 'o');
+  end
 end
