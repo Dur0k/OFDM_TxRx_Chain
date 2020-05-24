@@ -21,6 +21,7 @@ function c = encode_hamming(b, parity_check_matrix, n_zero_padded_bits, switch_o
       % create hamming code by performing matrix multiplication for each word
       c = mod(G*w, 2);
       c = c(:);
+      c = [c; zeros(n_zero_padded_bits,1)];
     else
       disp('Input length of b must be a multiple of 4')
   end
