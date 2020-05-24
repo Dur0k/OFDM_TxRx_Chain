@@ -29,5 +29,10 @@ function d = map2symbols(c, constellation_order, switch_graph)
     if switch_graph
       figure;
       plot(real(d), imag(d), 'o');
+      TitleString = sprintf('%d-QAM Modulation', 2^constellation_order);
+      title(TitleString);
+      xlim([-1.2,1.2]);
+      ylim([-1.2,1.2]);
     end
+  end
 end
