@@ -10,26 +10,30 @@ close all;clear;clc;
 
 %% define parameters
 
-% switch_graph =                  % 1/0--> show/not show the graph
-% switch_off =                    % 1/0--> switch off/on the block
+switch_graph = 0;               % 1/0--> show/not show the graph
+switch_off =  0;                % 1/0--> switch off/on the block
 
-% fft_size =                      % FFT length /OFDM symbol length
-% N_blocks =                      % no. of blocks
-% parity_check_matrix =           % code parity check matrix
-% constellation_order =           % 2--> 4QAM; 4-->16QAM; 6-->64QAM
-% frame_size =                    % frame length
-% n_zero_padded_bits =            % no. of zeros added after encoding
-% pilot_symbol =                  % generated pilot symbols 
-% cp_size =                       % CP length
-% oversampling_factor =           % oversampling factor
-% downsampling_factor =           % downsampling factor
-%
-% clipping_threshold_tx =         % tx clipping_threshold
-% clipping_threshold_rx =         % rx clipping_threshold
-% channel_type =                  % channel type: 'AWGN', 'FSBF'
-%
-% snr_db =                        % SNRs in dB
-% iter =                          % no. of iteration
+fft_size = 1024;                % FFT length /OFDM symbol length
+frame_size = 27*256;            % frame length
+parity_check_matrix = [1 0 1 0 1 0 1;
+                       0 1 1 0 0 1 1;
+                       0 0 0 1 1 1 1];           % code parity check matrix
+constellation_order = 4;        % 2--> 4QAM; 4-->16QAM; 6-->64QAM
+N_blocks = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size/fft_size);                     % no. of blocks
+
+n_zero_padded_bits = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size -frame_size/4*7/constellation_order)*constellation_order;            % no. of zeros added after encoding
+pilot_symbols = ones(fft_size, 1) * (0.7071 + 0.7071i);
+pilot_symbols(1:2:end) = ones(fft_size/2, 1) * (-0.7071 - 0.7071i);                  % generated pilot symbols 
+cp_size = fft_size/8;           % CP length
+oversampling_factor = 20;       % oversampling factor
+downsampling_factor = 20;       % downsampling factor
+
+clipping_threshold_tx = 1.4;      % tx clipping_threshold
+clipping_threshold_rx = 1.4;      % rx clipping_threshold
+channel_type = 'AWGN';          % channel type: 'AWGN', 'FSBF'
+
+snr_db = [50, 40, 35, 30, 25, 20, 15, 10, 5, 3, 1];  % SNRs in dB
+iter = 5;                      % no. of iteration
 
 %% initialize vectors
 % You can save the BER result in a vector corresponding to different SNRs
@@ -38,8 +42,11 @@ close all;clear;clc;
 % BER_coded =
 
 %% OFDM transmission
-
+BER_coded = zeros(length(snr_db),1);
+BER_uncoded = zeros(length(snr_db),1);
 for ii = 1 : length(snr_db) % SNR Loop
+    BER_b_tmp = 0;
+    BER_c_tmp = 0;
     for jj = 1 : iter      % Frame Loop, generate enough simulated bits
         %% transmitter %%
         
@@ -53,7 +60,7 @@ for ii = 1 : length(snr_db) % SNR Loop
         d = map2symbols(c, constellation_order, switch_graph);
         
         %pilot insertion
-        D = insert_pilots(d, fft_size, N_blocks, pilot_symbol);
+        D = insert_pilots(d, fft_size, N_blocks, pilot_symbols);
         
         %ofdm modulation
         z = modulate_ofdm(D, fft_size, cp_size, switch_graph);
@@ -67,7 +74,7 @@ for ii = 1 : length(snr_db) % SNR Loop
         %% channel %%  
         
         %baseband channel 
-        y = simulate_channel(x, snr_db, channel_type);
+        y = simulate_channel(x, snr_db(ii), channel_type);
         
         %% receiver %%     
         
@@ -81,7 +88,7 @@ for ii = 1 : length(snr_db) % SNR Loop
         D_tilde= demodulate_ofdm(z_tilde, fft_size, cp_size, switch_graph);
         
         %equalizer
-        d_bar = equalize(D_tilde, pilot_symbol, switch_graph);
+        d_bar = equalize(D_tilde, pilot_symbols, switch_graph);
         
         %demodulation
         c_hat = detect_symbols(d_bar, constellation_order, switch_graph);
@@ -90,14 +97,20 @@ for ii = 1 : length(snr_db) % SNR Loop
         b_hat = decode_hamming(c_hat, parity_check_matrix, n_zero_padded_bits, switch_off, switch_graph);
         
         %digital sink
-        BER = digital_sink(b, b_hat);
-        
+        [BER_b, BER_c] = digital_sink(b, b_hat, c, c_hat);
+        BER_b_tmp = BER_b_tmp + BER_b;
+        BER_c_tmp = BER_c_tmp + BER_c;
     end
+    BER_coded(ii) = BER_b_tmp/iter;
+    BER_uncoded(ii) = BER_c_tmp/iter;
 end
 
 %% plot BER-SNR figure
-%     figure;
-%     plot()
-
-
-
+figure;
+plot(snr_db,BER_coded);
+hold on;
+plot(snr_db,BER_uncoded,'--');
+xlabel('SNR in dB');
+ylabel('BER');
+legend('Coded','Uncoded');
+title('BER-SNR')

@@ -2,6 +2,7 @@ function b_hat = decode_hamming(c_hat, parity_check_matrix, n_zero_padded_bits, 
   if switch_off || isempty(c_hat)
     b_hat = c_hat;
   else
+    % Remove n_zero_padded_bits
     c_hat = c_hat(1:end-n_zero_padded_bits);
     if mod(length(c_hat), 7) == 0
       % determine parameters
@@ -11,7 +12,6 @@ function b_hat = decode_hamming(c_hat, parity_check_matrix, n_zero_padded_bits, 
       n_words = length(c_hat)/N_totBits; ... number of words within input chunk
       % reshape input block
       c = reshape(c_hat, [N_totBits n_words]); ... matrix of data words -- one word per column
-      
       R = [0 0 1 0 0 0 0;
           0 0 0 0 1 0 0;
           0 0 0 0 0 1 0;

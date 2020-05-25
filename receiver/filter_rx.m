@@ -5,14 +5,14 @@ if switch_off
     z_tilde = s_tilde;
 else
     % design filter impulse response
-    [iFiltOrd,fo,ao,w] = firpmord([0.4 0.6], [1 0], [10^(-3/20) 10^(-45/20)]);
-    iFiltOrd = ceil(iFiltOrd/2)*2; ... ceil to next even order
-    h = firpm(iFiltOrd, fo, ao, w);
-    g = h/sqrt(sum(h.^2));
+    L = 20; ... samples per symbol (up-/downsampling factor for analog simulation)
+    beta = 1;
+    g = rcosdesign(beta, 24, L, 'sqrt');
+    iFiltOrd = length(g)-1;
     % AD conversion and impulse shaping
-    d = conv(g,s_tilde)/downsampling_factor*sum(g);
+    d = conv(g,s_tilde);
     % downsampling
-    z_tilde = d(1+iFiltOrd:downsampling_factor:end-iFiltOrd);
+    z_tilde = d(1+iFiltOrd:downsampling_factor:end-iFiltOrd)/sqrt(downsampling_factor);
 end
 
 % graphical output
@@ -24,6 +24,16 @@ if switch_graph
     xlabel('\omega/f_s');
     ylabel('|G_{RX}(j\omega)|^2    (log)');
     title('spectral magnitude of g_{RX}');
+    
+    figure;
+    subplot(2,1,1);
+    stem(real(z_tilde));
+    legend({'Re\{z_{tilde}\}'});
+    subplot(2,1,2);
+    stem(imag(z_tilde));
+    legend({'Im\{z_{tilde}\}'});
+    z_p = z_tilde(1:100);
+    eyediagram(z_p,2);
 end
 
 end

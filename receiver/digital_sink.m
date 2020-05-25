@@ -1,4 +1,4 @@
-function BER = digital_sink(b, b_hat, c, c_hat)
+function [BER_b, BER_c] = digital_sink(b, b_hat, c, c_hat)
   if isempty(c_hat) | isempty(b_hat)
    BER_c = 0;
    BER_b = 0;
