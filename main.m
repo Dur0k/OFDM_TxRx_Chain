@@ -21,7 +21,7 @@ frame_size = 27*256;            % frame length
 parity_check_matrix = [1 0 1 0 1 0 1;
                        0 1 1 0 0 1 1;
                        0 0 0 1 1 1 1];           % code parity check matrix
-constellation_order = 4;        % 2--> 4QAM; 4-->16QAM; 6-->64QAM
+constellation_order = 2;        % 2--> 4QAM; 4-->16QAM; 6-->64QAM
 N_blocks = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size/fft_size);                     % no. of blocks
 
 n_zero_padded_bits = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size -frame_size/4*7/constellation_order)*constellation_order;            % no. of zeros added after encoding
@@ -32,7 +32,7 @@ oversampling_factor = 20;       % oversampling factor
 downsampling_factor = 20;       % downsampling factor
 
 clipping_threshold_tx = 1.4;      % tx clipping_threshold
-clipping_threshold_rx = 1.4;      % rx clipping_threshold
+clipping_threshold_rx = 1;      % rx clipping_threshold
 channel_type = 'AWGN';          % channel type: 'AWGN', 'FSBF'
 
 snr_db = [50, 40, 35, 30, 25, 20, 15, 10, 5, 3, 1];  % SNRs in dB

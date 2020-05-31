@@ -4,7 +4,7 @@ function x = impair_tx_hardware(s, clipping_threshold, switch_graph)
     s_abs = abs(s(i));
     % Clip all values greater than clipping_threshold
     if (s_abs > clipping_threshold)
-      s(i) = s(i)/s_abs;
+      s(i) = s(i)/s_abs * clipping_threshold;
     end
   end
   
