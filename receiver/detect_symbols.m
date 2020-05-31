@@ -7,22 +7,34 @@ function c_hat = detect_symbols(d_bar, constellation_order, switch_graph)
      % QAM demod -- offset/rescale and round values, DEC to BIN conversion, 
      switch constellation_order
        case 2
+         % Seperate x in real and imag parts, 'denormalize' and shift and
+         % scale values, so that original symbols -1 and 1 are now 0 and 1
+         % round can now be used because the decision threshold is the same
+         % as the rounding border: in<0.5 -> 0, in>0.5 -> 1
+         % resulting in integers of (-inf,inf) for I and Q
          I = round((real(d_bar)*qnorm+1)/2);
          Q = round((imag(d_bar)*qnorm+1)/2);
+         % Cut integers lower than 0 and higher than 1 back to 0 and 1
+         % Resulting in integers of [0,1]
          I(I>1) = 1;
          Q(Q>1) = 1;
          I(I<0) = 0;
          Q(Q<0) = 0;
+         % Seperatly convert I and Q to binary (not needed in this case)
+         % and create 2bit binary vector with column1=I and column2=Q
          c_hat = [de2bi(round(I), 1, 'left-msb') de2bi(round(Q), 1, 'left-msb')];
        case 4
+         % Gray decoding matrix
          G = inv([1 1;
                   0 1]);
+         % Shift original symbols from -3,-1,1,+3 to 0,1,2,3
          I = round((real(d_bar)*qnorm+3)/2);
          Q = round((imag(d_bar)*qnorm+3)/2);
          I(I>3) = 3;
          Q(Q>3) = 3;
          I(I<0) = 0;
          Q(Q<0) = 0;
+         % now use [0,3] -> 2 bit for each de2bi conversion
          c_hat = [de2bi(round(I), 2, 'left-msb') de2bi(round(Q), 2, 'left-msb')];
          c_hat = [mod(c_hat(:,1:end/2)*G, 2) mod(c_hat(:,end/2+1:end)*G, 2)];
        case 6
