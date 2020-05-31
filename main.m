@@ -7,6 +7,9 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 close all;clear;clc;
+addpath('transmitter/');
+addpath('receiver/');
+addpath('channel/');
 
 %% define parameters
 
@@ -88,7 +91,7 @@ for ii = 1 : length(snr_db) % SNR Loop
         D_tilde= demodulate_ofdm(z_tilde, fft_size, cp_size, switch_graph);
         
         %equalizer
-        d_bar = equalize(D_tilde, pilot_symbols, switch_graph);
+        d_bar = equalize_ofdm(D_tilde, pilot_symbols, switch_graph);
         
         %demodulation
         c_hat = detect_symbols(d_bar, constellation_order, switch_graph);
@@ -107,9 +110,9 @@ end
 
 %% plot BER-SNR figure
 figure;
-plot(snr_db,BER_coded);
+semilogy(snr_db,BER_coded);
 hold on;
-plot(snr_db,BER_uncoded,'--');
+semilogy(snr_db,BER_uncoded,'--');
 xlabel('SNR in dB');
 ylabel('BER');
 legend('Coded','Uncoded');

@@ -1,4 +1,4 @@
-function d_bar = equalize(D_tilde, pilot_symbols, switch_graph)
+function d_bar = equalize_ofdm(D_tilde, pilot_symbols, switch_graph)
   % Calculate equalization factor
   eq = pilot_symbols./D_tilde(:,1);
   % Remove pilot
