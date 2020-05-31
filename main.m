@@ -21,22 +21,27 @@ frame_size = 27*256;            % frame length
 parity_check_matrix = [1 0 1 0 1 0 1;
                        0 1 1 0 0 1 1;
                        0 0 0 1 1 1 1];           % code parity check matrix
-constellation_order = 2;        % 2--> 4QAM; 4-->16QAM; 6-->64QAM
+constellation_order = 6;        % 2--> 4QAM; 4-->16QAM; 6-->64QAM
 N_blocks = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size/fft_size);                     % no. of blocks
 
 n_zero_padded_bits = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size -frame_size/4*7/constellation_order)*constellation_order;            % no. of zeros added after encoding
-pilot_symbols = ones(fft_size, 1) * (0.7071 + 0.7071i);
-pilot_symbols(1:2:end) = ones(fft_size/2, 1) * (-0.7071 - 0.7071i);                  % generated pilot symbols 
+%pilot_symbols = ones(fft_size, 1) * (0.7071 + 0.7071i);
+%pilot_symbols(1:2:end) = ones(fft_size/2, 1) * (-0.7071 - 0.7071i);                  % generated pilot symbols 
+u = 7; % 
+q = 2; % cyc shift
+N = fft_size; % length
+n = (0:N-1);
+pilot_symbols = exp(-1j*pi*u*n.*(n+mod(N,2)+2*q)/N).';
 cp_size = fft_size/8;           % CP length
 oversampling_factor = 20;       % oversampling factor
 downsampling_factor = 20;       % downsampling factor
 
-clipping_threshold_tx = 1.4;      % tx clipping_threshold
+clipping_threshold_tx = 1.2;      % tx clipping_threshold
 clipping_threshold_rx = 1;      % rx clipping_threshold
 channel_type = 'AWGN';          % channel type: 'AWGN', 'FSBF'
 
-snr_db = [50, 40, 35, 30, 25, 20, 15, 10, 5, 3, 1];  % SNRs in dB
-iter = 5;                      % no. of iteration
+snr_db = -10:5:30;%[50, 40, 35, 30, 25, 20, 15, 10, 5, 3, 1];  % SNRs in dB
+iter = 1;                      % no. of iteration
 
 %% initialize vectors
 % You can save the BER result in a vector corresponding to different SNRs
@@ -91,7 +96,7 @@ for ii = 1 : length(snr_db) % SNR Loop
         D_tilde= demodulate_ofdm(z_tilde, fft_size, cp_size, switch_graph);
         
         %equalizer
-        d_bar = equalize_ofdm(D_tilde, pilot_symbols, switch_graph);
+        d_bar = equalize_ofdm(D_tilde, pilot_symbols, 1);
         
         %demodulation
         c_hat = detect_symbols(d_bar, constellation_order, switch_graph);
@@ -116,4 +121,5 @@ semilogy(snr_db,BER_uncoded,'--');
 xlabel('SNR in dB');
 ylabel('BER');
 legend('Coded','Uncoded');
+grid on;
 title('BER-SNR')
