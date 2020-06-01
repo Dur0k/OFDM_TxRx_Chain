@@ -21,18 +21,15 @@ frame_size = 27*256;            % frame length
 parity_check_matrix = [1 0 1 0 1 0 1;
                        0 1 1 0 0 1 1;
                        0 0 0 1 1 1 1];           % code parity check matrix
-constellation_order = 2;        % 2--> 4QAM; 4-->16QAM; 6-->64QAM
-N_blocks = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size/fft_size);                     % no. of blocks
-
-n_zero_padded_bits = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size -frame_size/4*7/constellation_order)*constellation_order;            % no. of zeros added after encoding
-%pilot_symbols = ones(fft_size, 1) * (0.7071 + 0.7071i);
-%pilot_symbols(1:2:end) = ones(fft_size/2, 1) * (-0.7071 - 0.7071i);                  % generated pilot symbols 
-u = 7; % 
-q = 2; % cyc shift
-N = fft_size; % length
-n = (0:N-1);
-pilot_symbols = exp(-1j*pi*u*n.*(n+mod(N,2)+2*q)/N).';
-cp_size = fft_size/8;           % CP length
+constellation_order = 6;        % 2--> 4QAM; 4-->16QAM; 6-->64QAM
+% no. of blocks
+N_blocks = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size/fft_size);
+% no. of zeros added after encoding
+n_zero_padded_bits = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size -frame_size/4*7/constellation_order)*constellation_order;
+% pseudo random pilot symbols (zadoff-chu sequence)
+pilot_symbols = zadoff_chu(7, 2, fft_size);
+% CP length, FSBF channel has length of 199
+cp_size = 256;
 oversampling_factor = 20;       % oversampling factor
 downsampling_factor = 20;       % downsampling factor
 
@@ -40,18 +37,15 @@ clipping_threshold_tx = 1.2;      % tx clipping_threshold
 clipping_threshold_rx = 1;      % rx clipping_threshold
 channel_type = 'FSBF';          % channel type: 'AWGN', 'FSBF'
 
-snr_db = -10:5:30;%[50, 40, 35, 30, 25, 20, 15, 10, 5, 3, 1];  % SNRs in dB
-iter = 50;                      % no. of iteration
+snr_db = 0:1:30;% SNRs in dB
+iter = 100;                      % no. of iteration
 
 %% initialize vectors
 % You can save the BER result in a vector corresponding to different SNRs
-
-% BER_uncoded =
-% BER_coded =
-
-%% OFDM transmission
 BER_coded = zeros(length(snr_db),1);
 BER_uncoded = zeros(length(snr_db),1);
+
+%% OFDM transmission
 for ii = 1 : length(snr_db) % SNR Loop
     BER_b_tmp = 0;
     BER_c_tmp = 0;
@@ -83,10 +77,6 @@ for ii = 1 : length(snr_db) % SNR Loop
         
         %baseband channel 
         y = simulate_channel(x, snr_db(ii), channel_type);
-        if (channel_type == 'FSBF')
-            y = y(1:end-199);
-        end
-        
         
         %% receiver %%     
         

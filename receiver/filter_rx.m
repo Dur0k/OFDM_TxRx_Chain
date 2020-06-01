@@ -5,7 +5,7 @@ if switch_off
     z_tilde = s_tilde;
 else
     % design filter impulse response
-    L = 20; ... samples per symbol (up-/downsampling factor for analog simulation)
+    L = downsampling_factor; ... samples per symbol (up-/downsampling factor for analog simulation)
     beta = 1;
     g = rcosdesign(beta, 24, L, 'sqrt');
     iFiltOrd = length(g)-1;
