@@ -13,7 +13,8 @@ else
     d = [z.'; zeros(oversampling_factor-1, length(z))]*sqrt(oversampling_factor);
     % DA conversion and impulse shaping
     s = conv(g,d(:));
-    s = s/max(s);
+    norm = sqrt(1/length(s) *sum(abs(s).^2));
+    s = s./norm;
 end
 
 % graphical output
