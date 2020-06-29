@@ -1,4 +1,9 @@
-function d_bar = equalize_ofdm(D_tilde, pilot_symbols, switch_graph)
+function d_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma, user_id, switch_graph)
+  if user_id == 0
+      D_tilde = D_tilde(1:length(D_tilde)/2,:);
+  elseif user_id == 1
+      D_tilde = D_tilde(length(D_tilde)/2+1:end,:);
+  end
   % Calculate equalization factor
   eq = pilot_symbols./D_tilde(:,1);
   % Remove pilot
