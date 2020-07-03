@@ -28,8 +28,7 @@ N_blocks = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size/fft_size)
 % no. of zeros added after encoding
 n_zero_padded_bits = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size -frame_size/4*7/constellation_order)*constellation_order;
 % pseudo random pilot symbols (zadoff-chu sequence)
-pilot_symbols0 = zadoff_chu(7, 2, fft_size/2);
-pilot_symbols1 = zadoff_chu(7, 2, fft_size/2);
+pilot_symbols = zadoff_chu(7, 2, fft_size/2);
 % CP length, FSBF channel has length of 199
 cp_size = 256;
 oversampling_factor = 20;       % oversampling factor
@@ -73,8 +72,8 @@ for ii = 1 : length(snr_db) % SNR Loop
         d1 = map2symbols(c1, constellation_order, switch_graph);
         
         %pilot insertion
-        D0 = insert_pilots(d0, fft_size/2, N_blocks, pilot_symbols0);
-        D1 = insert_pilots(d1, fft_size/2, N_blocks, pilot_symbols1);
+        D0 = insert_pilots(d0, fft_size/2, N_blocks, pilot_symbols);
+        D1 = insert_pilots(d1, fft_size/2, N_blocks, pilot_symbols);
         
         %ofdm modulation
         z0 = modulate_ofdm(D0, fft_size, cp_size, 0, mapping_mode, enable_scfdma, 0);
@@ -105,8 +104,8 @@ for ii = 1 : length(snr_db) % SNR Loop
         D_tilde= demodulate_ofdm(z_tilde, fft_size, cp_size, mapping_mode, enable_scfdma, switch_graph);
         
         %equalizer
-        d0_bar = equalize_ofdm(D_tilde, pilot_symbols0, enable_scfdma, fft_size, 0, 0);
-        d1_bar = equalize_ofdm(D_tilde, pilot_symbols1, enable_scfdma, fft_size, 1, 0);
+        d0_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma, fft_size, 0, 0);
+        d1_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma, fft_size, 1, 0);
 
         %demodulation
         c0_hat = detect_symbols(d0_bar, constellation_order, switch_graph);
