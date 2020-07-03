@@ -18,9 +18,10 @@ switch_off =  0;                % 1/0--> switch off/on the block
 
 fft_size = 1024;                % FFT length /OFDM symbol length
 frame_size = 27*256;            % frame length
-parity_check_matrix = [1 0 1 0 1 0 1;
-                       0 1 1 0 0 1 1;
-                       0 0 0 1 1 1 1];           % code parity check matrix
+P = [1 1 0 1;
+     1 0 1 1;
+     0 1 1 1];
+parity_check_matrix = [P eye(size(P,1))];
 constellation_order = 6;        % 2--> 4QAM; 4-->16QAM; 6-->64QAM
 % no. of blocks
 N_blocks = (ceil(frame_size/4*7/constellation_order/fft_size)*fft_size/fft_size)*2;
@@ -38,11 +39,11 @@ clipping_threshold_tx = 8;      % tx clipping_threshold
 clipping_threshold_rx = 1;      % rx clipping_threshold
 channel_type = 'FSBF';          % channel type: 'AWGN', 'FSBF'
 
-enable_scfdma = 1;
+enable_scfdma = 0;
 mapping_mode = 0;
 
 snr_db = 0:1:30;% SNRs in dB
-iter = 100;                      % no. of iteration
+iter = 20;                      % no. of iteration
 
 %% initialize vectors
 % You can save the BER result in a vector corresponding to different SNRs

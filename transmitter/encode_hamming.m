@@ -4,25 +4,22 @@ function c = encode_hamming(b, parity_check_matrix, n_zero_padded_bits, switch_o
   else
     if mod(length(b), 4) == 0
       % determine parameters
-      k_prtyBits = size(parity_check_matrix,1);
-      N_totBits = size(parity_check_matrix, 2);
-      n_dataBits = N_totBits - k_prtyBits;
+      k_prtyBits = size(parity_check_matrix,1); ... number of parity bits per word
+      N_totBits = size(parity_check_matrix, 2); ... number of total bits per word
+      n_dataBits = N_totBits - k_prtyBits; ... number of data bits per word
       n_words = length(b)/n_dataBits; ... number of words within input chunk
 
-      G = [1 1 0 1;
-         1 0 1 1;
-         1 0 0 0;
-         0 1 1 1;
-         0 1 0 0;
-         0 0 1 0;
-         0 0 0 1];
+      % Create generator matrix
+      G = [eye(n_dataBits); parity_check_matrix(:,1:n_dataBits)]; ... derived by parity check matrix
+
       % reshape input block
       w = reshape(b, [n_dataBits n_words]); ... matrix of data words -- one word per column
+
       % create hamming code by performing matrix multiplication for each word
       c = mod(G*w, 2);
-      c = c(:);
+
       % Append zeros to vector
-      c = [c; zeros(n_zero_padded_bits,1)];
+      c = [c(:); zeros(n_zero_padded_bits,1)];
     else
       disp('Input length of b must be a multiple of 4')
   end
