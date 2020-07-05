@@ -1,6 +1,6 @@
 function s_tilde = impair_rx_hardware(y, clipping_threshold, switch_graph)
   % pass through the signal
-  s_tilde = y;
+  s_tilde = y.';
   if switch_graph == 1
     % Plot output
     figure;
