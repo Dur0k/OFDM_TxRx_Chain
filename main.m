@@ -42,11 +42,11 @@ enable_scfdma0 = 0;
 enable_scfdma1 = 1;
 mapping_mode = 0;
 
-live_papr_plot = 0;
-write_papr = 1;
+live_papr_plot = 1;
+write_papr = 0;
 
 snr_db = 0:2:30;% SNRs in dB
-iter = 5000;                      % no. of iteration
+iter = 10;                      % no. of iteration
 
 %% initialize vectors
 % You can save the BER result in a vector corresponding to different SNRs
