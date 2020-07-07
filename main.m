@@ -42,11 +42,11 @@ enable_scfdma0 = 0;
 enable_scfdma1 = 1;
 mapping_mode = 0;
 
-live_papr_plot = 1;
+live_papr_plot = 0;
 write_papr = 0;
 
-snr_db = 0:2:30;% SNRs in dB
-iter = 10;                      % no. of iteration
+snr_db = 0:1:30;% SNRs in dB
+iter = 1000;                      % no. of iteration
 
 %% initialize vectors
 % You can save the BER result in a vector corresponding to different SNRs
@@ -79,7 +79,9 @@ for ii = 1 : length(snr_db) % SNR Loop
     BER_c_tmp1 = 0;
     PAPR_tot_0 = zeros(iter,1);
     PAPR_tot_1 = zeros(iter,1);
-    papr_title = title(['PAPR, SNR=' num2str(snr_db(ii)) 'dB']);
+    if live_papr_plot
+        papr_title = title(['PAPR, SNR=' num2str(snr_db(ii)) 'dB']);
+    end
     for jj = 1 : iter      % Frame Loop, generate enough simulated bits
         %% transmitter %%
         
@@ -100,8 +102,8 @@ for ii = 1 : length(snr_db) % SNR Loop
         D1 = insert_pilots(d1, fft_size/2, N_blocks, pilot_symbols);
         
         %ofdm modulation
-        z0 = modulate_ofdm(D0, fft_size, cp_size, 0, mapping_mode, enable_scfdma0, 0);
-        z1 = modulate_ofdm(D1, fft_size, cp_size, 1, mapping_mode, enable_scfdma1, 0);
+        z0 = modulate_ofdm(D0, fft_size, cp_size, 0, mapping_mode, enable_scfdma0, switch_graph);
+        z1 = modulate_ofdm(D1, fft_size, cp_size, 1, mapping_mode, enable_scfdma1, switch_graph);
         
         %tx filter
         s0 = filter_tx(z0, oversampling_factor, switch_graph, switch_off);
@@ -128,8 +130,8 @@ for ii = 1 : length(snr_db) % SNR Loop
         D_tilde= demodulate_ofdm(z_tilde, fft_size, cp_size, mapping_mode, 0, switch_graph);
         
         %equalizer
-        d0_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma0, fft_size, 0, 0);
-        d1_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma1, fft_size, 1, 0);
+        d0_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma0, fft_size, 0, switch_graph);
+        d1_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma1, fft_size, 1, switch_graph);
 
         %demodulation
         c0_hat = detect_symbols(d0_bar, constellation_order, switch_graph);
