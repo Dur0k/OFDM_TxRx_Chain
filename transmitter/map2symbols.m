@@ -2,28 +2,28 @@ function d = map2symbols(c, constellation_order, switch_graph)
   if isempty(c)
      d = []; 
   else
-    % set parameters
-    n_bits = constellation_order;
-    n_words = length(c)/n_bits;
-    w = reshape(c, [n_bits n_words])';
-    % Normalization factor
-    qnorm = sqrt(2*(2^constellation_order-1)/3);
+    % determine parameters
+    M = length(c)/constellation_order; ... number of data words
+    k1 = 2^(constellation_order/2)-1; ... offset correction
+    k2 = sqrt(2*(2^constellation_order-1)/3); ... power normalization
+    
     % QAM -- cut data word in half, gray mapping, BIN to DEC conversion, cartesian mapping, offset/rescale
-    switch constellation_order
-      case 2
-        d = ( (bi2de(w(:,1:end/2), 'left-msb')*2-1) + 1j*(bi2de(w(:,end/2+1:end), 'left-msb')*2-1) ) / qnorm;
-      case 4
-        G = [1 1;
-          0 1];
-        c = [mod(w(:,1:end/2)*G, 2) mod(w(:,end/2+1:end)*G, 2)];
-        d = ( (bi2de(c(:,1:end/2), 'left-msb')*2-3) + 1j*(bi2de(c(:,end/2+1:end), 'left-msb')*2-3) ) / qnorm;
-      case 6
-        G = [1 1 1;
-            0 1 1;
-            0 0 1];
-        c = [mod(w(:,1:end/2)*G,2) mod(w(:,end/2+1:end)*G,2)];
-        d = ( (bi2de(c(:,1:3), 'left-msb')*2-7) + 1j*(bi2de(c(:,4:6), 'left-msb')*2-7) ) / qnorm; 
-    end
+    
+    % reshape input chunk
+    w = reshape(c, [constellation_order M]);
+    
+    % generator matrix
+    G = tril(ones(constellation_order/2));
+    
+    % gray mapping for QAM symbols
+    c = [mod(G*w(1:end/2,:), 2); mod(G*w(end/2+1:end,:), 2)];
+    
+    % bin2dec conversion
+    I = bi2de(c(1:end/2,:)', 'left-msb');
+    Q = bi2de(c(end/2+1:end,:)', 'left-msb');
+    
+    % compose and normalize complex symbols
+    d = (2*I-k1)/k2 + 1j*(2*Q-k1)/k2;
     
     % graphical output
     if switch_graph
@@ -33,6 +33,8 @@ function d = map2symbols(c, constellation_order, switch_graph)
       title(TitleString);
       xlim([-1.2,1.2]);
       ylim([-1.2,1.2]);
-    end
+      xlabel('Re\{d\}');
+      ylabel('Im\{d\}');
+  end
   end
 end
