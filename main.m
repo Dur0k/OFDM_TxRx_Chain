@@ -38,15 +38,14 @@ clipping_threshold_tx = 4;      % tx clipping_threshold
 clipping_threshold_rx = 1;      % rx clipping_threshold
 channel_type = 'FSBF';          % channel type: 'AWGN', 'FSBF'
 
-enable_scfdma0 = 0;
-enable_scfdma1 = 1;
+enable_scfdma = 1;
 mapping_mode = 0;
 
 live_papr_plot = 0;
 write_papr = 0;
 
-snr_db = 0:1:30;% SNRs in dB
-iter = 1000;                      % no. of iteration
+snr_db = 0:5:50;% SNRs in dB
+iter = 5000;                      % no. of iteration
 
 %% initialize vectors
 % You can save the BER result in a vector corresponding to different SNRs
@@ -67,7 +66,7 @@ if live_papr_plot
     papr_title = title('PAPR');
     xlabel('OFDM Symbols');
     ylabel('PAPR per symbol');
-    legend('OFDMA (User 0)', 'SC-FDMA (User 1)');
+    legend('User 0', 'User 1');
     p0.YDataSource = 'PAPR_tot_0';
     p1.YDataSource = 'PAPR_tot_1';
 end
@@ -77,8 +76,8 @@ for ii = 1 : length(snr_db) % SNR Loop
     BER_c_tmp0 = 0;
     BER_b_tmp1 = 0;
     BER_c_tmp1 = 0;
-    PAPR_tot_0 = zeros(iter,1);
-    PAPR_tot_1 = zeros(iter,1);
+    PAPR_tot_0 = zeros(iter*N_blocks,1);
+    PAPR_tot_1 = zeros(iter*N_blocks,1);
     if live_papr_plot
         papr_title = title(['PAPR, SNR=' num2str(snr_db(ii)) 'dB']);
     end
@@ -102,8 +101,8 @@ for ii = 1 : length(snr_db) % SNR Loop
         D1 = insert_pilots(d1, fft_size/2, N_blocks, pilot_symbols);
         
         %ofdm modulation
-        z0 = modulate_ofdm(D0, fft_size, cp_size, 0, mapping_mode, enable_scfdma0, switch_graph);
-        z1 = modulate_ofdm(D1, fft_size, cp_size, 1, mapping_mode, enable_scfdma1, switch_graph);
+        z0 = modulate_ofdm(D0, fft_size, cp_size, 0, mapping_mode, enable_scfdma, switch_graph);
+        z1 = modulate_ofdm(D1, fft_size, cp_size, 1, mapping_mode, enable_scfdma, switch_graph);
         
         %tx filter
         s0 = filter_tx(z0, oversampling_factor, switch_graph, switch_off);
@@ -112,12 +111,12 @@ for ii = 1 : length(snr_db) % SNR Loop
         %non-linear hardware
         x0 = impair_tx_hardware(s0, clipping_threshold_tx, switch_graph);
         x1 = impair_tx_hardware(s1, clipping_threshold_tx, switch_graph);
+        x = [x0.';x1.'];
         
         %% channel %%  
-        x = [x0.';x1.'];
         %baseband channel 
-        %y = simulate_channel(x, snr_db(ii), channel_type);
         y = simulate_channel_freqoffset(x, snr_db(ii), 0);
+        y = y(1:length(x));
         %% receiver %%     
         
         %rx hardware
@@ -127,11 +126,11 @@ for ii = 1 : length(snr_db) % SNR Loop
         z_tilde = filter_rx(s_tilde, downsampling_factor, switch_graph, switch_off);
         
         %ofdm demodulation
-        D_tilde= demodulate_ofdm(z_tilde, fft_size, cp_size, mapping_mode, 0, switch_graph);
+        D_tilde= demodulate_ofdm(z_tilde, fft_size, cp_size, mapping_mode, enable_scfdma, switch_graph);
         
         %equalizer
-        d0_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma0, fft_size, 0, switch_graph);
-        d1_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma1, fft_size, 1, switch_graph);
+        d0_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma, fft_size, 0, switch_graph);
+        d1_bar = equalize_ofdm(D_tilde, pilot_symbols, enable_scfdma, fft_size, 1, switch_graph);
 
         %demodulation
         c0_hat = detect_symbols(d0_bar, constellation_order, switch_graph);
@@ -141,14 +140,14 @@ for ii = 1 : length(snr_db) % SNR Loop
         b0_hat = decode_hamming(c0_hat, parity_check_matrix, n_zero_padded_bits, switch_off, switch_graph);
         b1_hat = decode_hamming(c1_hat, parity_check_matrix, n_zero_padded_bits, switch_off, switch_graph);
         %digital sink
-        [BER_b0, BER_c0, PAPR0] = digital_sink(b0, b0_hat, c0, c0_hat, x0, fft_size, oversampling_factor);
-        [BER_b1, BER_c1, PAPR1] = digital_sink(b1, b1_hat, c1, c1_hat, x1, fft_size, oversampling_factor);
+        [BER_b0, BER_c0, PAPR0] = digital_sink(b0, b0_hat, c0, c0_hat, x0, fft_size, cp_size, oversampling_factor);
+        [BER_b1, BER_c1, PAPR1] = digital_sink(b1, b1_hat, c1, c1_hat, x1, fft_size, cp_size, oversampling_factor);
         BER_b_tmp0 = BER_b_tmp0 + BER_b0;
         BER_c_tmp0 = BER_c_tmp0 + BER_c0;
         BER_b_tmp1 = BER_b_tmp1 + BER_b1;
         BER_c_tmp1 = BER_c_tmp1 + BER_c1;
-        PAPR_tot_0(jj) = PAPR0;
-        PAPR_tot_1(jj) = PAPR1;
+        PAPR_tot_0(((jj-1)*N_blocks)+1:((jj-1)*N_blocks)+N_blocks+1) = PAPR0;
+        PAPR_tot_1(((jj-1)*N_blocks)+1:((jj-1)*N_blocks)+N_blocks+1) = PAPR1;
         if live_papr_plot
             refreshdata
             drawnow
@@ -177,6 +176,6 @@ hold on;
 semilogy(snr_db,BER_uncoded1,'--','color',[0, 102, 255]/255);
 xlabel('SNR in dB');
 ylabel('BER');
-legend('OFDMA Coded','OFDMA Uncoded','SC-FDMA Coded','SC-FDMA Uncoded');
+legend('User 0 Coded','User 0 Uncoded','User 1 Coded','User 1 Uncoded');
 grid on;
 title('BER-SNR')
