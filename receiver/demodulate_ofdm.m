@@ -1,9 +1,8 @@
 function D_tilde = demodulate_ofdm(z_tilde, fft_size, cp_size, mapping_mode, enable_scfdma, switch_graph)
   % cut of cyclic prefix
-  y = z_tilde(cp_size+1:end);
-  N_blocks = floor(length(y)/fft_size);
-  y = y(1:fft_size*N_blocks);
-  D_tilde = reshape(y, [fft_size N_blocks]);
+  N_blocks = floor(length(z_tilde)/(fft_size+cp_size));
+  y = reshape(z_tilde,fft_size+cp_size,N_blocks);
+  D_tilde = y(cp_size+1:end,:);
   % Demodulate OFDM symbols
   D_tilde = fft(D_tilde,fft_size)/sqrt(fft_size);
  

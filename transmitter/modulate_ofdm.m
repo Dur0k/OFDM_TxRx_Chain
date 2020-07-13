@@ -1,16 +1,7 @@
 function z = modulate_ofdm(D, fft_size, cp_size, user_id, mapping_mode, enable_scfdma, switch_graph)
   if enable_scfdma
-      % Remove pilot before precoding
-      pilot = D(:,1);
-      D = D(:,2:end);
       % DFT precoding
-      % Divide in subsequences of length N=fft_size/2=size(D,1)/2
-      D = reshape(D,size(D,1)/2,size(D,2)*2);
-      % Calculate fft of of length N
-      D = fft(D,fft_size/4)/sqrt(fft_size/4);
-      D = reshape(D,size(D,1)*2,size(D,2)/2);
-      % Add pilot again
-      D = [pilot, D];
+      D = fft(D,fft_size/2);
   end
   % User data allocation
   % Block resource mapping
@@ -35,9 +26,8 @@ function z = modulate_ofdm(D, fft_size, cp_size, user_id, mapping_mode, enable_s
       % Calc ifft for each qam vector in block D
       y = ifft(D,fft_size)*sqrt(fft_size);
       % Copy cyclic prefix of cp_size in front of y
-      y = y(:);
-      z = [y(end-cp_size+1:end); y];
-  
+      y = [y(end-(cp_size-1):end,:);y];
+      z = y(:);  
   
   if switch_graph
     figure;
